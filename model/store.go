@@ -2,52 +2,38 @@ package model
 
 import "time"
 
-type CreateStoreRequest struct {
-	Name          string `json:"name"`
-	BusinessHours struct {
-		Monday []struct {
-			Open  string `json:"open"`
-			Close string `json:"close"`
-		} `json:"monday,omitempty"`
-		Tuesday []struct {
-			Open  string `json:"open"`
-			Close string `json:"close"`
-		} `json:"tuesday,omitempty"`
-		Wednesday []struct {
-			Open  string `json:"open"`
-			Close string `json:"close"`
-		} `json:"wednesday,omitempty"`
-		Thursday []struct {
-			Open  string `json:"open"`
-			Close string `json:"close"`
-		} `json:"thursday,omitempty"`
-		Friday []struct {
-			Open  string `json:"open"`
-			Close string `json:"close"`
-		} `json:"friday,omitempty"`
-		Saturday []struct {
-			Open  string `json:"open"`
-			Close string `json:"close"`
-		} `json:"saturday,omitempty"`
-		Sunday []struct {
-			Open  string `json:"open"`
-			Close string `json:"close"`
-		} `json:"sunday,omitempty"`
-	} `json:"business_hours"`
-	Location struct {
-		StreetNumber string  `json:"street_number"`
-		StreetName   string  `json:"street_name"`
-		CityName     string  `json:"city_name"`
-		StateName    string  `json:"state_name"`
-		Latitude     float64 `json:"latitude"`
-		Longitude    float64 `json:"longitude"`
-		Reference    string  `json:"reference"`
-	} `json:"location"`
-	ExternalID string `json:"external_id"`
+type BusinessHourPair struct {
+	Open  string `json:"open"`
+	Close string `json:"close"`
 }
 
-type CreateStoreResponse struct {
-	ID            int       `json:"id"`
+type BusinessHours struct {
+	Monday    []BusinessHourPair `json:"monday,omitempty"`
+	Tuesday   []BusinessHourPair `json:"tuesday,omitempty"`
+	Wednesday []BusinessHourPair `json:"wednesday,omitempty"`
+	Thursday  []BusinessHourPair `json:"thursday,omitempty"`
+	Friday    []BusinessHourPair `json:"friday,omitempty"`
+	Saturday  []BusinessHourPair `json:"saturday,omitempty"`
+	Sunday    []BusinessHourPair `json:"sunday,omitempty"`
+}
+
+type CreateStoreRequest struct {
+	Name          string        `json:"name,omitempty"`
+	BusinessHours BusinessHours `json:"business_hours"`
+	Location      struct {
+		StreetNumber string  `json:"street_number,omitempty"`
+		StreetName   string  `json:"street_name,omitempty"`
+		CityName     string  `json:"city_name,omitempty"`
+		StateName    string  `json:"state_name,omitempty"`
+		Latitude     float64 `json:"latitude,omitempty"`
+		Longitude    float64 `json:"longitude,omitempty"`
+		Reference    string  `json:"reference,omitempty"`
+	} `json:"location,omitempty"`
+	ExternalID string `json:"external_id,omitempty"`
+}
+
+type Store struct {
+	ID            string    `json:"id"`
 	Name          string    `json:"name"`
 	DateCreated   time.Time `json:"date_created"`
 	BusinessHours struct {
@@ -70,7 +56,7 @@ type CreateStoreResponse struct {
 }
 
 type GetStoreResponse struct {
-	CreateStoreResponse
+	Store
 }
 
 type UpdateStoreRequest struct {
@@ -83,5 +69,5 @@ type GetStoresResponse struct {
 		Offset int `json:"offset"`
 		Limit  int `json:"limit"`
 	} `json:"paging"`
-	Results []CreateStoreResponse `json:"results"`
+	Results []Store `json:"results"`
 }

@@ -15,6 +15,15 @@ type StoreService struct {
 	client *ApiClient
 }
 
+type IStoreService interface {
+	CreateStore(userID string, body model.CreateStoreRequest) (model.Store, error)
+	GetStore(storeID string) (model.GetStoreResponse, error)
+	GetStoreByExternalID(userID string, externalID string) (model.GetStoresResponse, error)
+	GetStores(userID string, limit int) (model.GetStoresResponse, error)
+	UpdateStore(userID string, storeID string, body model.UpdateStoreRequest) (model.Store, error)
+	DeleteStore(userID string, storeID string) error
+}
+
 func NewStoreService(client *ApiClient) *StoreService {
 	return &StoreService{
 		client: client,
@@ -22,27 +31,27 @@ func NewStoreService(client *ApiClient) *StoreService {
 }
 
 // CreateStore Create a store
-func (s *StoreService) CreateStore(body model.CreateStoreRequest) (model.CreateStoreResponse, error) {
+func (s *StoreService) CreateStore(userID string, body model.CreateStoreRequest) (model.Store, error) {
 	var (
-		path = "/stores"
+		path = "%s/users/%s/stores"
 	)
 
 	postBody, err := json.Marshal(body)
 	if err != nil {
-		return model.CreateStoreResponse{}, err
+		return model.Store{}, err
 	}
 
-	url := fmt.Sprintf("%s%s", s.client.BaseURL, path)
+	url := fmt.Sprintf(path, s.client.BaseURL, userID)
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(postBody))
 	if err != nil {
-		return model.CreateStoreResponse{}, err
+		return model.Store{}, err
 	}
 
 	// request url
 	r, err := s.client.callAPI(req)
 	if err != nil {
-		return model.CreateStoreResponse{}, err
+		return model.Store{}, err
 	}
 	defer r.Body.Close()
 	b, err := io.ReadAll(r.Body)
@@ -50,7 +59,7 @@ func (s *StoreService) CreateStore(body model.CreateStoreRequest) (model.CreateS
 		log.Fatalln(err)
 	}
 
-	var response model.CreateStoreResponse
+	var response model.Store
 	json.Unmarshal(b, &response)
 
 	return response, nil
@@ -77,43 +86,33 @@ func (s *StoreService) GetStore(storeID string) (model.GetStoreResponse, error) 
 		return model.GetStoreResponse{}, err
 	}
 	defer r.Body.Close()
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
+
 	var response model.GetStoreResponse
-	json.Unmarshal(b, &response)
+	s.client.DeserializeBody(r.Body, &response)
 
 	return response, nil
 
 }
 
 // GetStore By External ID Get a store by external ID
-func (s *StoreService) GetStoreByExternalID(userID string, externalID string) (model.GetStoreResponse, error) {
+func (s *StoreService) GetStoreByExternalID(userID string, externalID string) (model.GetStoresResponse, error) {
 
-	var (
-		path = "/stores/search?external_id="
-	)
-
-	url := fmt.Sprintf("%susers/%s/%s/search?external_id=%s", s.client.BaseURL, userID, path, externalID)
+	url := fmt.Sprintf("%susers/%s/stores/search?external_id=%s", s.client.BaseURL, userID, externalID)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return model.GetStoreResponse{}, err
+		return model.GetStoresResponse{}, err
 	}
 
 	// request url
 	r, err := s.client.callAPI(req)
 	if err != nil {
-		return model.GetStoreResponse{}, err
+		return model.GetStoresResponse{}, err
 	}
+
 	defer r.Body.Close()
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	var response model.GetStoreResponse
-	json.Unmarshal(b, &response)
+	var response model.GetStoresResponse
+	s.client.DeserializeBody(r.Body, &response)
 
 	return response, nil
 
@@ -139,16 +138,67 @@ func (s *StoreService) GetStores(userID string, limit int) (model.GetStoresRespo
 		return model.GetStoresResponse{}, err
 	}
 
-	// read response body
-	defer r.Body.Close()
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	var response model.GetStoresResponse
-	json.Unmarshal(b, &response)
+	err = s.client.DeserializeBody(r.Body, &response)
+	if err != nil {
+		return model.GetStoresResponse{}, err
+	}
+	defer r.Body.Close()
 
 	return response, nil
+
+}
+
+func (s *StoreService) UpdateStore(userID string, storeID string, body model.UpdateStoreRequest) (model.Store, error) {
+
+	var (
+		path = "%s/users/%s/stores/%s"
+	)
+
+	url := fmt.Sprintf(path, s.client.BaseURL, userID, storeID)
+
+	postBody, err := json.Marshal(body)
+	if err != nil {
+		return model.Store{}, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(postBody))
+	if err != nil {
+		return model.Store{}, err
+	}
+
+	r, err := s.client.callAPI(req)
+	if err != nil {
+		return model.Store{}, err
+	}
+
+	defer r.Body.Close()
+	var response model.Store
+	s.client.DeserializeBody(r.Body, &response)
+
+	return response, nil
+
+}
+
+func (s *StoreService) DeleteStore(userID string, storeID string) error {
+
+	var (
+		path = "%s/users/%s/stores/%s"
+	)
+
+	url := fmt.Sprintf(path, s.client.BaseURL, userID, storeID)
+
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return err
+	}
+
+	// request url
+	_, err = s.client.callAPI(req)
+	if err != nil {
+		return err
+	}
+
+	return nil
 
 }
