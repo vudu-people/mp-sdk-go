@@ -1,5 +1,7 @@
 package mpsdkgo
 
+//go:generate mockgen -source=store_service.go -destination=mocks/store_service_mock.go -package=mocks
+
 import (
 	"bytes"
 	"encoding/json"

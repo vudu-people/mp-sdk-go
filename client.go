@@ -11,8 +11,8 @@ import (
 
 type ApiClient struct {
 	cfg     *Config
-	Store   *StoreService
-	Pos     *PosService
+	Store   IStoreService
+	Pos     IPosService
 	BaseURL string
 }
 

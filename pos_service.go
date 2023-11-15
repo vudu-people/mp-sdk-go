@@ -1,3 +1,5 @@
+//go:generate mockgen -source=pos_service.go -destination=mocks/pos_service_mock.go -package=mocks
+
 package mpsdkgo
 
 import (
