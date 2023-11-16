@@ -10,10 +10,11 @@ import (
 )
 
 type ApiClient struct {
-	cfg     *Config
-	Store   IStoreService
-	Pos     IPosService
-	BaseURL string
+	cfg            *Config
+	Store          IStoreService
+	Pos            IPosService
+	PaymentMethods IPaymentMethodsService
+	BaseURL        string
 }
 
 func NewApiClient(cfg *Config) *ApiClient {
@@ -28,6 +29,7 @@ func NewApiClient(cfg *Config) *ApiClient {
 
 	client.Store = NewStoreService(client)
 	client.Pos = NewPosService(client)
+	client.PaymentMethods = NewPaymentMethodsService(client)
 
 	return client
 
